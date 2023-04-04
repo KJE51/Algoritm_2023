@@ -1,0 +1,255 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class BOJ17472 {
+	/**
+	 * 가능한 다리를 모두 구한 후, 부분집합을 찾아서 가장 작은 다리 길이 구하기
+	 */
+
+	static int arr[][], parents[], islandN, n, m, minAns = 999;
+	static ArrayList<Bridge> bridges = new ArrayList<>();
+	static boolean[] visited;
+
+	static class Bridge {
+		// 1이 더 작은 섬 번호
+		int island1;
+		int island2;
+		int startI;
+		int startK;
+		// 진행방향
+		int nextI;
+		int nextK;
+		int size;
+
+		public Bridge(int island1, int island2, int startI, int startK, int nextI, int nextK, int size) {
+			super();
+			if (island1 < island2) {
+				this.island1 = island1;
+				this.island2 = island2;
+			} else {
+				this.island2 = island1;
+				this.island1 = island2;
+			}
+			this.startI = startI;
+			this.startK = startK;
+			this.nextI = nextI;
+			this.nextK = nextK;
+			this.size = size;
+		}
+
+		@Override
+		public String toString() {
+			return "Bridge [island1=" + island1 + ", island2=" + island2 + ", startI=" + startI + ", startK=" + startK
+					+ ", size=" + size + "]";
+		}
+
+	}
+
+	public static void main(String[] args) throws Exception {
+		// 입력받기
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		String[] str = br.readLine().split(" ");
+		n = Integer.parseInt(str[0]);
+		m = Integer.parseInt(str[1]);
+		arr = new int[n][m];
+		for (int i = 0; i < n; i++) {
+			str = br.readLine().split(" ");
+			for (int k = 0; k < m; k++) {
+				arr[i][k] = Integer.parseInt(str[k]);
+				if (arr[i][k] == 1)
+					arr[i][k] = -1;
+			}
+		}
+
+		// BFS를 사용해 섬에 번호를 매긴 후, arr에 표시된 섬 번호 이름 바꿈
+		Queue<Integer> queI = new LinkedList<Integer>();
+		Queue<Integer> queK = new LinkedList<Integer>();
+		int[] di = { 0, 0, 1, -1 };
+		int[] dk = { 1, -1, 0, 0 };
+
+		int nowI, nowK, newI, newK;
+		islandN = 0;
+		for (int i = 0; i < n; i++) {
+			for (int k = 0; k < m; k++) {
+				// 섬에 번호가 없을 시, 번호 매김
+				if (arr[i][k] == -1) {
+					islandN++;
+					arr[i][k] = islandN;
+					queI.add(i);
+					queK.add(k);
+					while (!queI.isEmpty()) {
+						nowI = queI.poll();
+						nowK = queK.poll();
+						for (int d = 0; d < 4; d++) {
+							newI = nowI + di[d];
+							newK = nowK + dk[d];
+							if (newI < 0 || newK < 0 || newI >= n || newK >= m || arr[newI][newK] != -1) {
+								continue;
+							}
+							queI.add(newI);
+							queK.add(newK);
+							arr[newI][newK] = islandN;
+						}
+					}
+				}
+			}
+		}
+
+		// 번호 잘 만들어졌는지 출력
+//		for(int i = 0; i < n; i++)
+//		System.out.println(Arrays.toString(arr[i]));
+
+		// 만들어 질 수 있는 모든 다리의 경우의 수
+		// 가로 탐색
+		int startIsland, len, endIsland;
+		for (int i = 0; i < n; i++) {
+			for (int k = 1; k < m; k++) {
+				// 다리의 시작점일 때
+				if (arr[i][k] != arr[i][k - 1] && arr[i][k] == 0) {
+					startIsland = arr[i][k - 1];
+					len = 0;
+					while (k < m) {
+						if (arr[i][k] != 0) {
+							break;
+						}
+						k++;
+						len++;
+					}
+					// 다리의 길이가 작거나, 범위를 넘어가거나, 같은 섬일 때
+					if (len == 1 || k == m || arr[i][k] == startIsland) {
+					} else
+						bridges.add(new Bridge(startIsland, arr[i][k], i, k - len, 0, 1, len));
+				}
+			}
+		}
+
+		// 세로 탐색
+		for (int k = 0; k < m; k++) {
+			for (int i = 1; i < n; i++) {
+				// 다리의 시작점일 때
+				if (arr[i - 1][k] != arr[i][k] && arr[i][k] == 0) {
+					startIsland = arr[i - 1][k];
+					len = 0;
+					while (i < n) {
+						if (arr[i][k] != 0) {
+							break;
+						}
+						i++;
+						len++;
+					}
+					// 다리의 길이가 작거나, 범위를 넘어가거나, 같은 섬일 때
+					if (len == 1 || i == n || arr[i][k] == startIsland) {
+					} else
+						bridges.add(new Bridge(startIsland, arr[i][k], i - len, k, 1, 0, len));
+				}
+			}
+		}
+
+		System.out.println(bridges.size());
+		System.out.println(bridges);
+
+		// 서로소집합을 통해 다리 이어졌는지 테스트 - 해당 단계를 위한 배열
+		parents = new int[islandN + 1];
+		for (int i = 0; i < islandN + 1; i++) {
+			parents[i] = i;
+		}
+
+		// dfs를 통한 부분집합 돌리기, 파라미터는 현재 bridges의 인덱스
+		visited = new boolean[bridges.size()];
+		dfs(0);
+
+		if (minAns == 999)
+			System.out.println(-1);
+		else
+			System.out.println(minAns);
+	}
+
+	private static void dfs(int idx) {
+		// 끝까지 왔을 때
+		if (idx == bridges.size()) {
+			
+			// 서로소집합을 통해 다 연결되었는지 확인
+			for (int i = 0; i < islandN + 1; i++) {
+				findP(i);
+			}
+			for (int i = 2; i < islandN + 1; i++) {
+				if (parents[i] != parents[i - 1])
+					return;
+			}
+
+			for (int i = 0; i < n; i++) {
+				for (int k = 0; k < m; k++) {
+					arr[i][k] = 0;
+				}
+			}
+			int tmp = 0;
+			Bridge bridge;
+			for (int i = 0; i < bridges.size(); i++) {
+				if (visited[i]) {
+					for (int d = 0; d < bridges.get(i).size; d++) {
+						bridge = bridges.get(i);
+						arr[bridge.startI + d * bridge.nextI][bridge.startK + d * bridge.nextK] = 1;
+					}
+				}
+			}
+
+			for (int i = 0; i < n; i++) {
+				for (int k = 0; k < m; k++) {
+					if (arr[i][k] == 1)
+						tmp++;
+				}
+			}
+
+			System.out.println(Arrays.toString(visited));
+			for (int i = 0; i < n; i++)
+				System.out.println(Arrays.toString(arr[i]));
+			System.out.println(tmp);
+			minAns = Math.min(tmp, minAns);
+			return;
+		}
+
+		// 서로소 집합으로 다리 놓을 때 판단
+		int island1 = bridges.get(idx).island1;
+		int island2 = bridges.get(idx).island2;
+
+		// 서로소집합 이전값 저장을 위한 배열
+		int[] parentsPre = new int[islandN + 1];
+		for (int i = 0; i < islandN + 1; i++) {
+			parentsPre[i] = parents[i];
+		}
+
+		// 둘 다 다른 집합이었을 때, 다리 놓기
+		if (union(island1, island2)) {
+			visited[idx] = true;
+			dfs(idx + 1);
+			visited[idx] = false;
+			for (int i = 0; i < islandN + 1; i++) {
+				parents[i] = parentsPre[i];
+			}
+		}
+
+		// 다리를 안 놓을 때
+		dfs(idx + 1);
+	}
+
+	private static boolean union(int island1, int island2) {
+		int parent1 = findP(island1);
+		int parent2 = findP(island2);
+		if (parent1 == parent2)
+			return false;
+
+		parents[parent2] = parent1;
+		return true;
+	}
+
+	private static int findP(int idx) {
+		if (idx == parents[idx])
+			return idx;
+		return parents[idx] = findP(parents[idx]);
+	}
+
+}

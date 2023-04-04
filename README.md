@@ -23,3 +23,7 @@ BOJ 9205 맥주 마시면서 걸어가기 - BFS<br>
 SWEA 1263 사람 네트워크2 - 플로이드 워샬<br>
 SWEA 4192 userProblem 수영대회 - 브루트포스, BFS<br>
 SWEA 4193 userProblem 수영대회 결승전 - 브루트포스, 구현, BFS<br>
+<h3>4일</h3>
+BOJ 2146 다리만들기 - BFS<br>
+BOJ 17472 다리만들기2 - 구현, 브루트포스, BFS, Union Find<br>
+SWEA 5643 키 순서<br>
