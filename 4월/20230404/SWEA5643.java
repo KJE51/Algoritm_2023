@@ -1,11 +1,13 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class SWEA5643 {
 	/**
 	 * 해당 노드와 연결된 노드의 갯수가 n-1개일 때 순서를 알 수 있음
+	 * 플루이드 워샬을 사용해 본인과 해당 노드가 연결되어있는지 확인 가능
 	 * */
 	public static void main(String[] args) throws Exception {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -13,75 +15,57 @@ public class SWEA5643 {
 		String[] str;
 		StringBuilder sb = new StringBuilder();
 		
-		int n, n1, m, a, b, ans, size, now, newN, tmp;
-		LinkedList<Integer>[] graph;
-		LinkedList<Integer>[] graphB;
-		Queue<Integer> que = new LinkedList<>();
-		boolean[] visited;
+		int n, n1, m, a, b, ans;
+		int[][] arr;
 		
 		for(int tc = 1; tc < testCase; tc++) {
 			n = Integer.parseInt(br.readLine());
 			n1 = n +1;
 			m = Integer.parseInt(br.readLine());
-			ans = 0;
 			
-			//인접 리스트를 통해 그래프 구현
-			graph = new LinkedList[n+1];
-			graphB = new LinkedList[n+1];
+			//인접 행렬을 통해 그래프 구현
+			arr = new int[n1][n1];
+			
+			//그래프 초기화 - 모든 간선 최댓값으로, i==k일 시는 0
 			for(int i = 1; i < n1; i++) {
-				graph[i] = new LinkedList<>();
-				graphB[i] = new LinkedList<>();
+				for(int k = 1; k < n1; k++) {
+					if(i!= k)
+						arr[i][k] = 9999;
+				}
 			}
 			
-			for(int i = 0; i < m ;i++) {
+			//입력받기
+			for(int i = 0; i < m; i++) {
 				str = br.readLine().split(" ");
 				a = Integer.parseInt(str[0]);
 				b = Integer.parseInt(str[1]);
-				graph[a].add(b);
-				graphB[b].add(a);
+				arr[a][b] = 1;
 			}
 			
-			visited = new boolean[n+1];
-			//각 노드마다 그래프 탐색을 돌려서 만약 모든 노드를 탐색할 수 있다면 ans에 추가
+			//플로이드 워샬을 통해 구현
+			//경유지, 출발, 도착 순서
+			for(int mid = 1; mid < n1; mid++) {
+				for(int s = 1; s < n1; s++) {
+					for(int e = 1; e < n1; e++) {
+						arr[s][e] = Math.min(arr[s][e], arr[s][mid]+arr[mid][e]);
+					}
+				}
+			}
+			
+			ans = 0;
+			boolean flag = true;
+			//플루이드 워샬 배열에서 나와 해당 노드가 이어질 수 없을 때는 순서를 알 수 없음
 			for(int i = 1; i < n1; i++) {
-				tmp = 1;
-				//정방향 탐색
-				que.add(i);
-				visited[i] = true;
-				while(!que.isEmpty()) {
-					now = que.poll();
-					size = graph[now].size();
-					for(int k = 0; k < size; k++) {
-						newN = graph[now].get(k);
-						if(!visited[newN]) {
-							visited[newN] = true;
-							que.add(newN);
-							tmp++;
-						}
+				flag = true;
+				for(int k = 1; k < n1; k++) {
+					if(arr[i][k] == 9999 && arr[k][i] == 9999) {
+						flag = false;
+						break;
 					}
 				}
-				
-				//역방향 탐색
-				que.add(i);
-				while(!que.isEmpty()) {
-					now = que.poll();
-					size = graphB[now].size();
-					for(int k = 0; k < size; k++) {
-						newN = graphB[now].get(k);
-						if(!visited[newN]) {
-							visited[newN] = true;
-							que.add(newN);
-							tmp++;
-						}
-					}
-				}
-//				System.out.println(Arrays.toString(visited));
-				if(tmp == n)
+				if(flag)
 					ans++;
-				for(int t = 0; t < n1; t++)
-					visited[t] = false;
 			}
-			
 			
 			sb.append("#").append(tc).append(" ").append(ans).append('\n');
 		}
