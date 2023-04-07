@@ -11,7 +11,6 @@ public class SWEA1245 {
         StringBuilder sb = new StringBuilder();
         double left, right, mid=0;
         double res;
-        int cnt;
          
         for(int tc = 1; tc < testCase; tc++) {
             sb.append('#').append(tc);
@@ -30,9 +29,7 @@ public class SWEA1245 {
                 //각 구간에 대한 이분탐색
                 left = arr[i-1][0];
                 right = arr[i][0];
-                cnt = 0;
-                while(left < right && cnt <101) {
-                    cnt++;
+                while(left < right && right-left > 1e-12) {
                     mid = (left + right)/2;
                     res = cal(mid, i);
                     if(res == 0) {
