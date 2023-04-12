@@ -31,7 +31,8 @@ public class SWEA3124 {
 		int testCase = Integer.parseInt(br.readLine()) + 1;
 		String[] str;
 		StringBuilder sb = new StringBuilder();
-		int ans, v, v1, e, a, b, len, cnt;
+		int v, v1, e, a, b, len, cnt;
+		long ans;
 		boolean[] visited;
 		ArrayList<Data>[] arr;
 		PriorityQueue<Data> pq = new PriorityQueue<>();
